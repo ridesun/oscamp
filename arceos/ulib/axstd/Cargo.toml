@@ -79,3 +79,5 @@ axio = "0.1"
 axerrno = "0.1"
 kspin = "0.1"
 hashbrown = "0.15.1"
+ahash = {version = "0.8.11",features = ["runtime-rng"],default-features = false}
+getrandom = {version = "0.2.15",features = ["custom"]}

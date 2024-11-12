@@ -1,14 +1,25 @@
-use core::hash::{BuildHasher, Hash, Hasher};
+use core::hash::{BuildHasher, Hash};
+//use core::hash::Hasher;
 use arceos_api::modules::axhal::misc::random;
-use core::hash::BuildHasherDefault;
+//use core::hash::BuildHasherDefault;
+use getrandom::register_custom_getrandom;
+use ahash::RandomState;
 
-pub struct HashMap<K, V, S=MyBuildHasher> {
+
+register_custom_getrandom!(custom_random);
+pub struct HashMap<K, V, S=RandomState> {
     base: hashbrown::HashMap<K, V, S>,
 }
 
-impl<K, V> HashMap<K, V, MyBuildHasher> {
-    pub fn new() -> HashMap<K, V, MyBuildHasher> {
+impl<K, V> HashMap<K, V, RandomState> {
+    #[inline]
+    pub fn new() -> HashMap<K, V, RandomState> {
         Default::default()
+    }
+
+    #[inline]
+    pub fn with_capacity(capacity: usize) -> HashMap<K, V, RandomState> {
+        HashMap::with_capacity_and_hasher(capacity, Default::default())
     }
 }
 
@@ -25,7 +36,6 @@ impl<K, V, S> Default for HashMap<K, V, S>
 where
     S: Default,
 {
-    /// Creates an empty `HashMap<K, V, S>`, with the `Default` value for the hasher.
     #[inline]
     fn default() -> HashMap<K, V, S> {
         HashMap::with_hasher(Default::default())
@@ -33,12 +43,19 @@ where
 }
 
 impl<K,V,S> HashMap<K,V,S>{
+    #[inline]
     pub const fn with_hasher(hash_builder: S) -> HashMap<K, V, S> {
         HashMap { base: hashbrown::HashMap::with_hasher(hash_builder) }
     }
 
+    #[inline]
     pub fn iter(&self) -> Iter<'_, K, V> {
         Iter { base: self.base.iter() }
+    }
+
+    #[inline]
+    pub fn with_capacity_and_hasher(capacity: usize, hasher: S) -> HashMap<K, V, S> {
+        HashMap { base: hashbrown::HashMap::with_capacity_and_hasher(capacity, hasher) }
     }
 }
 
@@ -71,25 +88,32 @@ impl<'a, K, V> Iterator for Iter<'a, K, V> {
     }
 }
 
-pub struct MyHasher{
-    hash:u64
-}
+// pub struct MyHasher{
+//     hash:u64
+// }
+//
+// impl Hasher for MyHasher {
+//     fn finish(&self) -> u64 {
+//         self.hash
+//     }
+//
+//     fn write(&mut self, bytes: &[u8]) {
+//         for &byte in bytes {
+//             self.hash^=byte as u64;
+//             self.hash=self.hash.wrapping_mul(random() as u64);
+//         }
+//     }
+// }
+// impl Default for MyHasher {
+//     fn default() -> Self {
+//         Self{hash:0}
+//     }
+// }
+// type MyBuildHasher = BuildHasherDefault<MyHasher>;
 
-impl Hasher for MyHasher {
-    fn finish(&self) -> u64 {
-        self.hash
+fn custom_random(dest: &mut [u8])->Result<(),getrandom::Error>{
+    for i in 0..dest.len(){
+        dest[i]=random() as u8;
     }
-
-    fn write(&mut self, bytes: &[u8]) {
-        for &byte in bytes {
-            self.hash^=byte as u64;
-            self.hash=self.hash.wrapping_mul(random() as u64);
-        }
-    }
+    Ok(())
 }
-impl Default for MyHasher {
-    fn default() -> Self {
-        Self{hash:0}
-    }
-}
-type MyBuildHasher = BuildHasherDefault<MyHasher>;
