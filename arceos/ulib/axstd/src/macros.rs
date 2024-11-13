@@ -27,8 +27,8 @@ macro_rules! println {
 macro_rules! println_color {
         ($start_color:expr, $end_color:expr, $($arg:tt)*) => ({
 
-        let text = $crate::format!($($arg)*);
-        let chars: $crate::vec::Vec<char> = text.chars().collect();
+        let text = alloc::format!($($arg)*);
+        let chars: alloc::vec::Vec<char> = text.chars().collect();
         let len = chars.len();
 
         struct RGB {

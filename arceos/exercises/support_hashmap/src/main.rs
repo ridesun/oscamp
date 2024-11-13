@@ -29,7 +29,7 @@ fn test_hashmap() {
     }
     let end=std::time::Instant::now();
     println!("test_hashmap() OK!");
-    println!("time: {:.3}s",end.duration_since(start).as_secs_f32())
+    println!("time: {:.3}s",end.duration_since(start).as_secs_f32());
 }
 fn test_hashmap_with_capacity() {
     const N: u32 = 50_000;
@@ -46,5 +46,5 @@ fn test_hashmap_with_capacity() {
     }
     let end=std::time::Instant::now();
     println!("test_hashmap_with_capacity() OK!");
-    println!("time: {:.3}s",end.duration_since(start).as_secs_f32())
+    println!("time: {:.3}s",end.duration_since(start).as_secs_f32());
 }
