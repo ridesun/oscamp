@@ -74,6 +74,22 @@ pub mod sync;
 pub mod thread;
 pub mod time;
 
+pub use arceos_api::modules::axhal::time::current_ticks;
+pub static COLOR_GRADIENTS: [(&str, &str); 12] = [
+    ("#7CF7FF", "#4B73FF"),  // 青色到蓝色
+    ("#FFED46", "#FF7EC7"),  // 黄色到粉色
+    ("#8FFF85", "#39A0FF"),  // 绿色到蓝色
+    ("#8A88FB", "#D079EE"),  // 紫色到粉紫色
+    ("#FFBB89", "#7B6AE0"),  // 橙色到紫色
+    ("#FFEB3A", "#4DEF8E"),  // 黄色到绿色
+    ("#FFF500", "#FFB800"),  // 亮黄色到橙色
+    ("#FFEAF6", "#FF9DE4"),  // 浅粉到深粉
+    ("#FFDC99", "#FF62C0"),  // 浅橙到粉红
+    ("#DDE4FF", "#8DA2EE"),  // 浅蓝到中蓝
+    ("#FFADF7", "#B1FF96"),  // 粉红到浅绿
+    ("#B7DCFF", "#FFA4F6"),  // 浅蓝到粉红
+];
+
 #[cfg(feature = "fs")]
 pub mod fs;
 #[cfg(feature = "net")]

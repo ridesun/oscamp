@@ -13,22 +13,33 @@ macro_rules! print {
     }
 }
 
-/// Prints to the standard output, with a newline.
+#[cfg(not(feature = "alloc"))]
 #[macro_export]
 macro_rules! println {
     () => { $crate::print!("\n") };
     ($($arg:tt)*) => {
-        // $crate::io::__print_impl(format_args!("{}\n", format_args!($($arg)*)));
-        $crate::println_color!("#EE82EE", "#00D1FF", $($arg)*);
+        $crate::io::__print_impl(format_args!("{}\n", format_args!($($arg)*)));
+    }
+}
+/// Prints to the standard output, with a newline.
+#[cfg(feature = "alloc")]
+#[macro_export]
+macro_rules! println {
+    () => { $crate::print!("\n") };
+    ($($arg:tt)*) => {
+        let i=$crate::current_ticks() as usize%12;
+        let (s,e)=$crate::COLOR_GRADIENTS[i];
+        $crate::println_color!(s, e,$($arg)*);
     }
 }
 
+#[cfg(feature = "alloc")]
 #[macro_export]
 macro_rules! println_color {
         ($start_color:expr, $end_color:expr, $($arg:tt)*) => ({
 
-        let text = alloc::format!($($arg)*);
-        let chars: alloc::vec::Vec<char> = text.chars().collect();
+        let text = $crate::format!($($arg)*);
+        let chars: $crate::vec::Vec<char> = text.chars().collect();
         let len = chars.len();
 
         struct RGB {
