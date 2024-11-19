@@ -7,7 +7,7 @@ use allocator::AllocError::NoMemory;
 use allocator::{AllocError, AllocResult, BaseAllocator, BuddyByteAllocator, ByteAllocator};
 use core::alloc::{GlobalAlloc, Layout};
 use core::cmp::max;
-use core::ptr::NonNull;
+use core::ptr::{self, NonNull};
 use log::info;
 
 /// [ Buddy | keep | free ]
@@ -59,9 +59,9 @@ impl ByteAllocator for LabByteAllocator {
             },
             1=>{
                 self.count += 1;
-
+                info!("{}",self.count);
                 let size = layout.size();
-                match (self.count-1) %2{
+                match (self.count-1) %15 %2{
                     0=>{
                         self.free = MEMORY_END- size;
                         if self.free < self.keep {
@@ -87,9 +87,9 @@ impl ByteAllocator for LabByteAllocator {
                 self.buddy.dealloc(pos, layout);
             },
             _=>{
-                self.count-=1;
-                if self.count==0{
-                    self.keep = self.start;
+                info!("{},{}",MEMORY_END-self.free,layout.size());
+                if self.count%15==0{
+                    self.free=MEMORY_END;
                 }
             }
         }
