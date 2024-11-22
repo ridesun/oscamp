@@ -1,13 +1,15 @@
 #![allow(dead_code)]
 
-use core::ffi::{c_void, c_char, c_int};
-use axhal::arch::TrapFrame;
-use axhal::trap::{register_trap_handler, SYSCALL};
+use arceos_posix_api as api;
+use arceos_posix_api::get_file_like;
 use axerrno::LinuxError;
+use axhal::arch::TrapFrame;
+use axhal::paging::MappingFlags;
+use axhal::trap::{register_trap_handler, SYSCALL};
 use axtask::current;
 use axtask::TaskExtRef;
-use axhal::paging::MappingFlags;
-use arceos_posix_api as api;
+use core::ffi::{c_char, c_int, c_void};
+use memory_addr::{VirtAddr, VirtAddrRange, PAGE_SIZE_4K};
 
 const SYS_IOCTL: usize = 29;
 const SYS_OPENAT: usize = 56;
@@ -140,7 +142,33 @@ fn sys_mmap(
     fd: i32,
     _offset: isize,
 ) -> isize {
-    unimplemented!("no sys_mmap!");
+    let prot=MmapProt::from_bits(prot).unwrap();
+    let flags=MmapFlags::from_bits(flags).unwrap();
+    let fixed=flags.contains(MmapFlags::MAP_FIXED);
+    if fixed&&addr.is_null(){
+        return -1;
+    }
+    let current=current();
+    let mut uspace =current.as_task_ref().inner().task_ext().aspace.lock();
+    let addr=if addr.is_null(){
+        uspace.find_free_area(uspace.base(),length,VirtAddrRange{
+            start:uspace.base(),
+            end:uspace.end(),
+        }).unwrap()
+    }else {
+       VirtAddr::from_ptr_of(addr)
+    };
+    if fd < 0 {
+        uspace.map_alloc(addr, PAGE_SIZE_4K, prot.into(), true).unwrap();
+        addr.as_usize() as isize
+    } else {
+        let file = get_file_like(fd).unwrap();
+        let mut buf=[0u8;64];
+        file.read(&mut buf).unwrap();
+        uspace.map_alloc(addr, PAGE_SIZE_4K, prot.into(), true).unwrap();
+        uspace.write(addr, &buf).unwrap();
+        addr.as_usize() as isize
+    }
 }
 
 fn sys_openat(dfd: c_int, fname: *const c_char, flags: c_int, mode: api::ctypes::mode_t) -> isize {
